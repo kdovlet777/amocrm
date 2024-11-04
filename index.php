@@ -25,7 +25,7 @@
     </form>
     <script>
         document.querySelector('form').onsubmit = function() {
-            document.getElementById('userTime').value = userTime ? '1' : '0';
+            document.querySelector('#userTime').value = userTime ? '1' : '0';
         }
     </script>
 </body>
