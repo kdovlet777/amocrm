@@ -10,12 +10,12 @@ use AmoCRM\Models\ContactModel;
 use AmoCRM\Models\LeadModel;
 use AmoCRM\Client\LongLivedAccessToken;
 use AmoCRM\Collections\CustomFieldsValuesCollection;
-use AmoCRM\Models\CustomFieldsValues\TextCustomFieldValuesModel;
+use AmoCRM\Models\CustomFieldsValues\CheckboxCustomFieldValuesModel;
 use AmoCRM\Models\CustomFieldsValues\MultitextCustomFieldValuesModel;
-use AmoCRM\Models\CustomFieldsValues\ValueCollections\TextCustomFieldValueCollection;
 use AmoCRM\Models\CustomFieldsValues\ValueCollections\MultitextCustomFieldValueCollection;
-use AmoCRM\Models\CustomFieldsValues\ValueModels\TextCustomFieldValueModel;
+use AmoCRM\Models\CustomFieldsValues\ValueCollections\CheckboxCustomFieldValueCollection;
 use AmoCRM\Models\CustomFieldsValues\ValueModels\MultitextCustomFieldValueModel;
+use AmoCRM\Models\CustomFieldsValues\ValueModels\CheckboxCustomFieldValueModel;
 
 $dotenv = Dotenv::createImmutable(__DIR__);
 $dotenv->load();
@@ -33,55 +33,58 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email = trim($_POST['email'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
     $price = (int)trim($_POST['price'] ?? '');
+    $isChecked = $_POST['userTime'] == 1 ? true : false;
 
+    // Создание сделки
     $lead = (new LeadModel())
-        ->setName('Новая заявка с сайта dovlet.moscow')
+        ->setName('Заявка с сайта dovlet.moscow')
         ->setPrice($price);
 
-    // Заполнение раздела Контакты
+    // Создание контакта
     $contact = (new ContactModel())
-    ->setName($name)
-    ->setCustomFieldsValues(
-        (new CustomFieldsValuesCollection())
-            ->add(
-                (new MultitextCustomFieldValuesModel())
-                    ->setFieldCode('EMAIL')
-                    ->setValues(
-                        (new MultitextCustomFieldValueCollection())
-                            ->add((new MultitextCustomFieldValueModel())->setValue($email))
-                    )
-            )
-            ->add(
-                (new MultitextCustomFieldValuesModel())
-                    ->setFieldCode('PHONE')
-                    ->setValues(
-                        (new MultitextCustomFieldValueCollection())
-                            ->add((new MultitextCustomFieldValueModel())->setValue($phone))
-                    )
-            )
-    );
-
-    $contactsCollection = (new ContactsCollection())->add($contact);
-    $lead->setContacts($contactsCollection);
-
-    // Заполнение поля "Провел более 30сек"
-    $timeSpent = isset($_POST['userTime']) ? (string)$_POST['userTime'] : '0';
-
-    $leadCustomFieldsValues = new CustomFieldsValuesCollection();
-
-    $textCustomFieldValuesModel = (new TextCustomFieldValuesModel())
-        ->setFieldId(737457)
-        ->setValues(
-            (new TextCustomFieldValueCollection())
-                ->add((new TextCustomFieldValueModel())->setValue($timeSpent))
+        ->setName($name)
+        ->setCustomFieldsValues(
+            (new CustomFieldsValuesCollection())
+                ->add(
+                    (new MultitextCustomFieldValuesModel())
+                        ->setFieldCode('EMAIL')
+                        ->setValues(
+                            (new MultitextCustomFieldValueCollection())
+                                ->add((new MultitextCustomFieldValueModel())->setValue($email))
+                        )
+                )
+                ->add(
+                    (new MultitextCustomFieldValuesModel())
+                        ->setFieldCode('PHONE')
+                        ->setValues(
+                            (new MultitextCustomFieldValueCollection())
+                                ->add((new MultitextCustomFieldValueModel())->setValue($phone))
+                        )
+                )
         );
 
-    $leadCustomFieldsValues->add($textCustomFieldValuesModel);
+    // Настройка кастомного поля для checkbox
+    $leadCustomFieldsValues = new CustomFieldsValuesCollection();
+
+    $checkboxCustomFieldValuesModel = (new CheckboxCustomFieldValuesModel())
+        ->setFieldId(737671)
+        ->setValues(
+            (new CheckboxCustomFieldValueCollection())
+                ->add((new CheckboxCustomFieldValueModel())->setValue($isChecked ? '1' : '0'))
+        );
+
+    $leadCustomFieldsValues->add($checkboxCustomFieldValuesModel);
     $lead->setCustomFieldsValues($leadCustomFieldsValues);
 
     try {
-
+        // Сначала добавляем контакт
         $responseContact = $apiClient->contacts()->addOne($contact);
+        
+        // Теперь устанавливаем связь с лидом
+        $contactsCollection = (new ContactsCollection())->add($responseContact);
+        $lead->setContacts($contactsCollection);
+        
+        // Добавляем сделку
         $responseLead = $apiClient->leads()->addOne($lead);
 
         echo "Заявка успешно отправлена в amoCRM с ценой: $price!";
