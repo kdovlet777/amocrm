@@ -10,6 +10,14 @@
     gap: 10px;
 }
 
+h1 {
+    font-size: 44px;
+
+    @media screen and (max-width: 480px) {
+        font-size: 28px;
+    }
+}
+
 img {
     width: 50px;
     border-radius: 50%;
@@ -52,4 +60,33 @@ form button[type="submit"] {
 
 form button[type="submit"]:hover {
     background-color: #45a049;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    font-family: SF-Pro;
+    margin-top: 30px;
+}
+
+.success-block {
+    width: 300px;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: #e8e8e8;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+}
+
+.success-icon {
+    width: 260px;
+}
+
+.success-icon > svg > path {
+    fill: #00b300;
+}
+
+.success-text {
+    text-align: center;
 }

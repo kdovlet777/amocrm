@@ -87,7 +87,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         // Добавляем сделку
         $responseLead = $apiClient->leads()->addOne($lead);
 
-        echo "Заявка успешно отправлена в amoCRM с ценой: $price!";
+        include 'success.php';
+
     } catch (Exception $e) {
         echo "Ошибка при отправке заявки: " . $e->getMessage();
         if (method_exists($e, 'getResponse') && $e->getResponse()) {
